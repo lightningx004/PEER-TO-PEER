@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- PWA / Home Screen Icon -->
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="NEXUS LINK" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
   <title>NEXUS LINK — Cross-Device Communication</title>
   <meta name="description" content="Real-time cross-device messaging and file sharing with a hacker aesthetic." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -10,10 +19,13 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <!-- Particle Canvas Background -->
   <canvas id="particles-canvas"></canvas>
+
   <!-- CRT Scanline Overlay -->
   <div class="scanlines"></div>
+
   <!-- ========== JOIN SCREEN ========== -->
   <div id="join-screen" class="screen active">
     <div class="join-container">
@@ -21,6 +33,7 @@
         <div class="logo-glitch" data-text="NEXUS LINK">NEXUS LINK</div>
         <div class="logo-sub">[ CROSS-DEVICE COMMUNICATION PROTOCOL ]</div>
       </div>
+
       <div class="terminal-box">
         <div class="terminal-header">
           <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
@@ -43,11 +56,13 @@
           <div id="join-error" class="error-msg hidden"></div>
         </div>
       </div>
+
       <div class="join-footer">
         <span class="blink-dot"></span> SECURE · PEER-TO-PEER · ENCRYPTED
       </div>
     </div>
   </div>
+
   <!-- ========== CHAT SCREEN ========== -->
   <div id="chat-screen" class="screen">
     <!-- Sidebar -->
@@ -60,6 +75,7 @@
         </div>
         <button id="sidebar-close-btn" class="sidebar-close-btn" title="Close Sidebar">✕</button>
       </div>
+
       <div class="online-section">
         <div class="section-label">// ONLINE DEVICES</div>
         <div id="device-list" class="device-list"></div>
@@ -68,11 +84,13 @@
           <span id="online-count">0</span> DEVICE(S) ONLINE
         </div>
       </div>
+
       <div class="sidebar-actions">
         <button id="copy-room-btn" class="side-btn">⧉ COPY ROOM ID</button>
         <button id="disconnect-btn" class="side-btn danger">✕ DISCONNECT</button>
       </div>
     </aside>
+
     <!-- Main Chat Area -->
     <main class="chat-main">
       <div class="chat-header">
@@ -91,17 +109,20 @@
         </div>
         <div id="header-device-name" class="header-device"></div>
       </div>
+
       <!-- Messages -->
       <div id="messages-container" class="messages-container">
         <div class="messages-inner" id="messages-inner">
           <!-- System welcome message injected by JS -->
         </div>
       </div>
+
       <!-- Typing Indicator -->
       <div id="typing-indicator" class="typing-indicator hidden">
         <span id="typing-text"></span>
         <span class="typing-dots"><span></span><span></span><span></span></span>
       </div>
+
       <!-- Input Bar -->
       <div class="input-bar">
         <label for="file-input" class="attach-btn" title="Attach file">
@@ -110,7 +131,9 @@
           </svg>
         </label>
         <input type="file" id="file-input" multiple style="display:none" />
+
         <div id="file-preview-strip" class="file-preview-strip hidden"></div>
+
         <input
           type="text"
           id="message-input"
@@ -127,6 +150,7 @@
       </div>
     </main>
   </div>
+
   <!-- ========== FILE PREVIEW MODAL ========== -->
   <div id="preview-modal" class="modal hidden">
     <div class="modal-backdrop" id="modal-backdrop"></div>
@@ -141,8 +165,10 @@
       </div>
     </div>
   </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="toast hidden"></div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="app.js"></script>
 </body>

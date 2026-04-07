@@ -1,7 +1,9 @@
 /* ─────────────────────────────────────────
    NEXUS LINK — Hacker Theme Stylesheet
    ───────────────────────────────────────── */
+
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
 /* ── CSS Variables ── */
 :root {
   --bg: #000000;
@@ -22,13 +24,16 @@
   --mono: 'Share Tech Mono', monospace;
   --heading: 'Orbitron', monospace;
 }
+
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--mono); }
+
 /* ── Particle Canvas ── */
 #particles-canvas {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
 }
+
 /* ── CRT Scanlines ── */
 .scanlines {
   position: fixed; inset: 0; z-index: 1; pointer-events: none;
@@ -40,9 +45,11 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
     rgba(0,0,0,0.08) 4px
   );
 }
+
 /* ── Screens ── */
 .screen { position: fixed; inset: 0; z-index: 10; display: none; }
 .screen.active { display: flex; }
+
 /* ═══════════════════════════════════════
    JOIN SCREEN
 ═══════════════════════════════════════ */
@@ -52,12 +59,15 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   flex-direction: column;
   background: radial-gradient(ellipse at center, #001a00 0%, #000000 70%);
 }
+
 .join-container {
   display: flex; flex-direction: column; align-items: center; gap: 2rem;
   width: 100%; max-width: 500px; padding: 2rem;
 }
+
 /* Logo */
 .logo-area { text-align: center; }
+
 .logo-glitch {
   font-family: var(--heading);
   font-size: clamp(2rem, 6vw, 3.5rem);
@@ -84,10 +94,12 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   animation: glitch-bot 2.5s infinite linear alternate-reverse;
   text-shadow: 2px 0 #0044ff;
 }
+
 .logo-sub {
   font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.3em;
   margin-top: 0.5rem; opacity: 0.8;
 }
+
 /* Terminal Box */
 .terminal-box {
   width: 100%;
@@ -98,6 +110,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   overflow: hidden;
   backdrop-filter: blur(10px);
 }
+
 .terminal-header {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.6rem 1rem;
@@ -109,10 +122,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .dot.yellow { background: #ffbd2e; box-shadow: 0 0 6px #ffbd2e; }
 .dot.green  { background: #28c940; box-shadow: 0 0 6px #28c940; }
 .terminal-title { font-size: 0.7rem; color: var(--text-dim); margin-left: 0.5rem; letter-spacing: 0.15em; }
+
 .terminal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; }
+
 .input-group { display: flex; flex-direction: column; gap: 0.5rem; }
 .input-group label { font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.2em; display: flex; align-items: center; gap: 0.4rem; }
 .prompt { color: var(--green); font-size: 0.9rem; }
+
 .input-group input {
   background: rgba(0,255,65,0.04);
   border: 1px solid var(--border);
@@ -130,6 +146,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   border-color: var(--green);
   box-shadow: 0 0 12px var(--green-glow);
 }
+
 #gen-room-btn {
   align-self: flex-end;
   background: transparent;
@@ -144,6 +161,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   letter-spacing: 0.1em;
 }
 #gen-room-btn:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+
 .connect-btn {
   position: relative; overflow: hidden;
   background: transparent;
@@ -171,6 +189,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   transition: transform 0.6s;
 }
 .connect-btn:hover .btn-glow { transform: translateX(100%); }
+
 .error-msg {
   font-size: 0.75rem; color: var(--red);
   background: rgba(255,51,51,0.1);
@@ -180,6 +199,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   text-align: center;
 }
 .hidden { display: none !important; }
+
 .join-footer {
   font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.3em;
   display: flex; align-items: center; gap: 0.5rem;
@@ -190,10 +210,12 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   box-shadow: 0 0 6px var(--green);
   animation: blink 1s steps(1) infinite;
 }
+
 /* ═══════════════════════════════════════
    CHAT SCREEN
 ═══════════════════════════════════════ */
 #chat-screen { flex-direction: row; }
+
 /* ── Sidebar ── */
 .sidebar {
   width: 220px;
@@ -208,11 +230,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   box-shadow: 2px 0 20px rgba(0,255,65,0.05);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, border-color 0.3s ease;
 }
+
 .sidebar.closed {
   width: 0px;
   border-right-color: transparent;
   opacity: 0;
 }
+
 .sidebar-header {
   display: flex; align-items: center; gap: 0.8rem;
   padding: 1rem;
@@ -250,8 +274,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   flex-shrink: 0;
 }
 .sidebar-close-btn:hover { background: rgba(255, 51, 51, 0.1); box-shadow: 0 0 8px rgba(255, 51, 51, 0.3); }
+
 .online-section { flex: 1; overflow-y: auto; padding: 1rem; }
 .section-label { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 0.2em; margin-bottom: 0.8rem; }
+
 .device-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
 .device-item {
   display: flex; align-items: center; gap: 0.6rem;
@@ -269,6 +295,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   animation: pulse-dot 2s ease infinite;
 }
 .device-item.self { border-color: rgba(0,255,65,0.2); background: rgba(0,255,65,0.08); }
+
 .online-count {
   font-size: 0.65rem; color: var(--text-dim);
   display: flex; align-items: center; gap: 0.5rem;
@@ -276,6 +303,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   border-top: 1px solid var(--border);
   margin-top: 0.5rem;
 }
+
 .sidebar-actions {
   padding: 1rem; border-top: 1px solid var(--border);
   display: flex; flex-direction: column; gap: 0.5rem;
@@ -295,12 +323,14 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .side-btn:hover { border-color: var(--green-dim); color: var(--green); box-shadow: 0 0 8px var(--green-glow); }
 .side-btn.danger:hover { border-color: var(--red); color: var(--red); box-shadow: 0 0 8px rgba(255,51,51,0.3); }
+
 /* ── Chat Main ── */
 .chat-main {
   flex: 1; display: flex; flex-direction: column;
   background: rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
+
 .chat-header {
   padding: 0.8rem 1.5rem;
   border-bottom: 1px solid var(--border);
@@ -310,6 +340,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .header-status { display: flex; align-items: center; gap: 0.7rem; font-size: 0.75rem; color: var(--text-dim); letter-spacing: 0.15em; }
 .header-device { font-size: 0.75rem; color: var(--green); letter-spacing: 0.1em; }
+
 /* Sidebar Toggle Mechanics */
 .sidebar-toggle-btn {
   background: var(--panel);
@@ -334,6 +365,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .sidebar-toggle-btn svg { width: 18px; height: 18px; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 .sidebar-toggle-btn.sidebar-closed svg { transform: scaleX(-1); }
+
 .mech-led {
   position: absolute; top: 4px; right: 4px;
   width: 5px; height: 5px; border-radius: 50%;
@@ -345,6 +377,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   background: var(--red);
   box-shadow: 0 0 5px var(--red);
 }
+
 /* Pulse dot */
 .pulse-dot {
   display: inline-block;
@@ -353,6 +386,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   box-shadow: 0 0 8px var(--green);
   animation: pulse-dot 2s ease infinite;
 }
+
 /* ── Messages ── */
 .messages-container {
   flex: 1; overflow-y: auto; overflow-x: hidden;
@@ -362,7 +396,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .messages-container::-webkit-scrollbar { width: 3px; }
 .messages-container::-webkit-scrollbar-track { background: transparent; }
 .messages-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
 .messages-inner { display: flex; flex-direction: column; gap: 0.8rem; }
+
 /* System messages */
 .msg-system {
   text-align: center;
@@ -380,6 +416,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .msg-system::before { right: calc(50% + 5px + var(--w, 40px)); background: linear-gradient(to right, transparent, var(--border)); }
 .msg-system::after  { left: calc(50% + 5px + var(--w, 40px)); background: linear-gradient(to left, transparent, var(--border)); }
+
 /* Message bubbles */
 .msg-wrapper {
   display: flex;
@@ -389,11 +426,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .msg-wrapper.self { align-self: flex-end; align-items: flex-end; }
 .msg-wrapper.other { align-self: flex-start; align-items: flex-start; }
+
 .msg-meta {
   font-size: 0.6rem; color: var(--text-dim);
   margin-bottom: 0.25rem;
   display: flex; gap: 0.5rem; align-items: center;
 }
+
 .msg-bubble {
   display: inline-block;
   padding: 0.7rem 1rem;
@@ -415,6 +454,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   border: 1px solid rgba(0,255,65,0.12);
   color: var(--text);
 }
+
 /* File Cards */
 .file-card {
   border: 1px solid var(--border);
@@ -426,6 +466,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .file-card:hover { border-color: var(--green-dim); box-shadow: 0 0 15px var(--green-glow); }
+
 .file-card img, .file-card video {
   width: 100%; max-height: 220px;
   object-fit: cover; display: block;
@@ -451,6 +492,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   font-family: var(--mono);
 }
 .file-download-btn:hover { background: rgba(0,255,65,0.15); box-shadow: 0 0 8px var(--green-glow); }
+
 .file-icon-card {
   padding: 1rem;
   display: flex; align-items: center; gap: 0.8rem;
@@ -459,6 +501,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .file-icon-info { display: flex; flex-direction: column; gap: 0.2rem; flex: 1; overflow: hidden; }
 .file-icon-name { font-size: 0.75rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-icon-size { font-size: 0.6rem; color: var(--text-dim); }
+
 /* ── Typing Indicator ── */
 .typing-indicator {
   padding: 0.4rem 1.5rem;
@@ -474,6 +517,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
 /* ── Input Bar ── */
 .input-bar {
   display: flex; align-items: center; gap: 0.7rem;
@@ -483,6 +527,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
+
 .attach-btn {
   display: flex; align-items: center; justify-content: center;
   width: 36px; height: 36px;
@@ -494,6 +539,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .attach-btn svg { width: 16px; height: 16px; }
 .attach-btn:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+
 .file-preview-strip {
   width: 100%;
   display: flex; gap: 0.5rem; flex-wrap: wrap;
@@ -522,6 +568,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   display: flex; align-items: center; justify-content: center;
   padding: 0;
 }
+
 .message-input {
   flex: 1;
   background: rgba(0,255,65,0.04);
@@ -538,6 +585,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .message-input::placeholder { color: var(--text-muted); }
 .message-input:focus { border-color: var(--green-dim); box-shadow: 0 0 10px var(--green-glow); }
+
 .send-btn {
   width: 40px; height: 40px; flex-shrink: 0;
   background: var(--green);
@@ -549,6 +597,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 }
 .send-btn svg { width: 16px; height: 16px; }
 .send-btn:hover { background: var(--green-bright); box-shadow: 0 0 20px var(--green); transform: scale(1.05); }
+
 /* ── Modal ── */
 .modal {
   position: fixed; inset: 0; z-index: 1000;
@@ -626,6 +675,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   background: rgba(0,255,65,0.05);
 }
 .download-btn:hover { background: rgba(0,255,65,0.12); box-shadow: 0 0 15px var(--green-glow); }
+
 /* ── Upload Progress ── */
 .upload-progress {
   display: flex; align-items: center; gap: 0.8rem;
@@ -650,6 +700,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   transition: width 0.2s;
   box-shadow: 0 0 6px var(--green);
 }
+
 /* ── Toast ── */
 .toast {
   position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%);
@@ -665,11 +716,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   animation: toastIn 0.3s ease;
 }
 .toast.hidden { display: none !important; }
+
 /* ═══════════════════════════════════════
    SCROLLBAR
 ═══════════════════════════════════════ */
 .online-section::-webkit-scrollbar { width: 2px; }
 .online-section::-webkit-scrollbar-thumb { background: var(--border); }
+
 /* ═══════════════════════════════════════
    ANIMATIONS
 ═══════════════════════════════════════ */
@@ -722,6 +775,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   from { opacity: 0; transform: translateX(-50%) translateY(10px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .msg-wrapper { max-width: 88%; }
