@@ -39,6 +39,8 @@ const modalBody        = document.getElementById('modal-body');
 const modalDownload    = document.getElementById('modal-download');
 const modalClose       = document.getElementById('modal-close');
 const toast            = document.getElementById('toast');
+const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+const sidebar          = document.querySelector('.sidebar');
 // ══════════════════════════════════
 // MATRIX DIGITAL RAIN BACKGROUND
 // ══════════════════════════════════
@@ -579,6 +581,10 @@ connectBtn.addEventListener('click', () => {
 // ══════════════════════════════════
 // SIDEBAR ACTIONS
 // ══════════════════════════════════
+sidebarToggleBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('closed');
+  sidebarToggleBtn.classList.toggle('sidebar-closed');
+});
 copyRoomBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(myRoom).then(() => showToast('✓ Room ID copied!')).catch(() => showToast('Could not copy'));
 });
