@@ -444,14 +444,30 @@ messageInput.addEventListener('input', startTyping);
 // SOCKET INITIALIZATION
 // ══════════════════════════════════
 function initSocket(roomId, deviceName) {
-  socket = io({ transports: ['websocket'] });
+  // Save session so page refresh can restore it
+  sessionStorage.setItem('nexus_room', roomId);
+  sessionStorage.setItem('nexus_name', deviceName);
+  socket = io({
+    transports: ['websocket'],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000
+  });
+  let isFirstConnect = true;
   socket.on('connect', () => {
+    // Always (re)join the room on (re)connect
     socket.emit('join-room', { roomId, deviceName });
   });
   socket.on('room-joined', ({ roomId, userCount, deviceList: dl }) => {
-    switchToChat(roomId, deviceName);
+    if (isFirstConnect) {
+      isFirstConnect = false;
+      switchToChat(roomId, deviceName);
+      appendSystemMsg(`⟩ Connected to room ${roomId} · ${userCount} device(s) online`);
+    } else {
+      appendSystemMsg(`⟩ Reconnected to room ${roomId} · ${userCount} device(s) online`);
+    }
     renderDeviceList(dl);
-    appendSystemMsg(`⟩ Connected to room ${roomId} · ${userCount} device(s) online`);
   });
   socket.on('user-joined', ({ deviceName: dn, userCount, deviceList: dl }) => {
     renderDeviceList(dl);
@@ -478,13 +494,23 @@ function initSocket(roomId, deviceName) {
   socket.on('user-stop-typing', () => {
     typingIndicator.classList.add('hidden');
   });
-  socket.on('disconnect', () => {
+  socket.on('disconnect', (reason) => {
     appendSystemMsg('⟩ Connection lost. Reconnecting...');
+    // If server intentionally disconnected us, reconnect manually
+    if (reason === 'io server disconnect') {
+      socket.connect();
+    }
+  });
+  socket.on('reconnect', (attemptNumber) => {
+    // room-joined event above handles the UI update
   });
   socket.on('connect_error', () => {
-    showError('Connection error. Is the server running?');
-    connectBtn.querySelector('.btn-text').textContent = 'ESTABLISH LINK';
-    connectBtn.disabled = false;
+    // Only show error on join screen, not during background reconnect
+    if (!chatScreen.classList.contains('active')) {
+      showError('Connection error. Is the server running?');
+      connectBtn.querySelector('.btn-text').textContent = 'ESTABLISH LINK';
+      connectBtn.disabled = false;
+    }
   });
 }
 // ══════════════════════════════════
@@ -506,6 +532,9 @@ function switchToJoin() {
   onlineCount.textContent = '0';
   pendingFiles = [];
   renderFileStrip();
+  // Clear saved session on manual disconnect
+  sessionStorage.removeItem('nexus_room');
+  sessionStorage.removeItem('nexus_name');
   if (socket) { socket.disconnect(); socket = null; }
 }
 // ══════════════════════════════════
@@ -553,3 +582,19 @@ document.addEventListener('keydown', (e) => {
     closePreviewModal();
   }
 });
+// ══════════════════════════════════
+// SESSION RESTORE ON PAGE LOAD
+// ══════════════════════════════════
+(function restoreSession() {
+  const savedRoom = sessionStorage.getItem('nexus_room');
+  const savedName = sessionStorage.getItem('nexus_name');
+  if (savedRoom && savedName) {
+    myName = savedName;
+    myRoom = savedRoom;
+    // Pre-fill the join form in case user goes back
+    deviceNameInput.value = savedName;
+    roomIdInput.value = savedRoom;
+    // Reconnect automatically
+    initSocket(savedRoom, savedName);
+  }
+})();
