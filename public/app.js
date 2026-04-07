@@ -9,6 +9,7 @@ let pendingFiles = [];
 let typingTimeout = null;
 let isTyping = false;
 let allFiles = {};  // id → file data
+let knownMessages = new Set(); // to prevent duplicate rendering
 // ══ DOM ══
 const joinScreen       = document.getElementById('join-screen');
 const chatScreen       = document.getElementById('chat-screen');
@@ -178,6 +179,8 @@ function appendSystemMsg(text) {
   applyCipherEffect(el, text, 20);
 }
 function appendTextMessage(data, isSelf) {
+  if (knownMessages.has(data.id)) return;
+  knownMessages.add(data.id);
   const wrapper = document.createElement('div');
   wrapper.className = `msg-wrapper ${isSelf ? 'self' : 'other'}`;
   const meta = document.createElement('div');
@@ -194,6 +197,8 @@ function appendTextMessage(data, isSelf) {
   applyCipherEffect(bubble, data.text, 10);
 }
 function appendFileMessage(data, isSelf) {
+  if (knownMessages.has(data.id)) return;
+  knownMessages.add(data.id);
   allFiles[data.id] = data;
   const wrapper = document.createElement('div');
   wrapper.className = `msg-wrapper ${isSelf ? 'self' : 'other'}`;
@@ -485,6 +490,13 @@ function initSocket(roomId, deviceName) {
     const isSelf = data.sender === myName;
     appendFileMessage(data, isSelf);
   });
+  socket.on('message-history', (history) => {
+    history.forEach(data => {
+      const isSelf = data.sender === myName;
+      if (data.type === 'text') appendTextMessage(data, isSelf);
+      else if (data.type === 'file') appendFileMessage(data, isSelf);
+    });
+  });
   socket.on('user-typing', ({ deviceName: dn }) => {
     typingText.textContent = `${dn} is typing`;
     typingIndicator.classList.remove('hidden');
@@ -531,6 +543,7 @@ function switchToJoin() {
   deviceList.innerHTML = '';
   onlineCount.textContent = '0';
   pendingFiles = [];
+  knownMessages.clear();
   renderFileStrip();
   // Clear saved session on manual disconnect
   sessionStorage.removeItem('nexus_room');
