@@ -11,9 +11,11 @@ const io = new Server(server, {
   cors: { origin: '*' },
   maxHttpBufferSize: 1e9 // 1GB max file size via socket
 });
-// Ensure uploads directory exists
+// Ensure uploads & chunks directories exist
 const uploadsDir = path.join(__dirname, 'uploads');
+const chunksDir  = path.join(__dirname, 'chunks');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
+if (!fs.existsSync(chunksDir))  fs.mkdirSync(chunksDir);
 // Multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
@@ -61,6 +63,71 @@ app.post('/upload', upload.single('file'), (req, res) => {
     io.to(roomId).emit('file-shared', msgData);
   }
   res.json(fileData);
+});
+// ── Chunked upload: receive one chunk ──────────────────────────────
+app.post('/upload-chunk',
+  express.raw({ type: 'application/octet-stream', limit: '110mb' }),
+  (req, res) => {
+    const fileId      = req.headers['x-file-id'];
+    const chunkIndex  = req.headers['x-chunk-index'];
+    if (!fileId || chunkIndex === undefined) return res.status(400).json({ error: 'Missing headers' });
+    const chunkPath = path.join(chunksDir, `${fileId}_${chunkIndex}`);
+    fs.writeFile(chunkPath, req.body, (err) => {
+      if (err) return res.status(500).json({ error: 'Failed to save chunk' });
+      res.json({ ok: true });
+    });
+  }
+);
+// ── Chunked upload: stream-assemble all chunks into final file ───────
+app.post('/upload-finalize', express.json(), async (req, res) => {
+  const { fileId, originalName, mimetype, totalChunks, roomId, deviceName } = req.body;
+  if (!fileId || !originalName || !totalChunks) return res.status(400).json({ error: 'Missing fields' });
+  const ext       = path.extname(originalName);
+  const filename  = `${fileId}${ext}`;
+  const finalPath = path.join(uploadsDir, filename);
+  try {
+    const writeStream = fs.createWriteStream(finalPath, { flags: 'w' });
+    const n = parseInt(totalChunks);
+    // Stream each chunk directly into the output — no RAM spike
+    for (let i = 0; i < n; i++) {
+      const chunkPath = path.join(chunksDir, `${fileId}_${i}`);
+      await new Promise((resolve, reject) => {
+        const readStream = fs.createReadStream(chunkPath);
+        readStream.on('error', reject);
+        readStream.on('end', () => {
+          fs.unlink(chunkPath, () => {}); // async cleanup
+          resolve();
+        });
+        readStream.pipe(writeStream, { end: false });
+      });
+    }
+    await new Promise((resolve, reject) => {
+      writeStream.end();
+      writeStream.on('finish', resolve);
+      writeStream.on('error', reject);
+    });
+    const stats   = fs.statSync(finalPath);
+    const fileUrl = `/uploads/${filename}`;
+    const fileData = {
+      id: fileId,
+      originalName,
+      mimetype,
+      size: stats.size,
+      url: fileUrl,
+      timestamp: new Date().toISOString()
+    };
+    if (roomId) {
+      const msgData = { ...fileData, sender: deviceName || 'Unknown Device', type: 'file' };
+      if (!roomMessages[roomId]) roomMessages[roomId] = [];
+      roomMessages[roomId].push(msgData);
+      if (roomMessages[roomId].length > 100) roomMessages[roomId].shift();
+      io.to(roomId).emit('file-shared', msgData);
+    }
+    res.json(fileData);
+  } catch (err) {
+    console.error('[NEXUS] Finalize error:', err);
+    res.status(500).json({ error: 'Failed to assemble file' });
+  }
 });
 // Health check
 app.get('/api/status', (req, res) => {
