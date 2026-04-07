@@ -188,11 +188,11 @@ function appendTextMessage(data, isSelf) {
     : `<span>${escapeHtml(data.sender)}</span><span>${formatTime(data.timestamp)}</span>`;
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
-  bubble.textContent = data.text;
   wrapper.appendChild(meta);
   wrapper.appendChild(bubble);
   messagesInner.appendChild(wrapper);
   scrollToBottom();
+  applyCipherEffect(bubble, data.text, 10);
 }
 function appendFileMessage(data, isSelf) {
   allFiles[data.id] = data;
@@ -494,9 +494,9 @@ function initSocket(roomId, deviceName) {
 function switchToChat(roomId, deviceName) {
   joinScreen.classList.remove('active');
   chatScreen.classList.add('active');
-  sidebarRoomId.textContent = roomId;
-  headerRoomLabel.textContent = `ROOM: ${roomId}`;
-  headerDeviceName.textContent = deviceName;
+  applyCipherEffect(sidebarRoomId, roomId, 20);
+  applyCipherEffect(headerRoomLabel, `ROOM: ${roomId}`, 20);
+  applyCipherEffect(headerDeviceName, deviceName, 20);
   messageInput.focus();
 }
 function switchToJoin() {
