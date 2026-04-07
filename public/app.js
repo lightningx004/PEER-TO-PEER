@@ -41,6 +41,7 @@ const modalClose       = document.getElementById('modal-close');
 const toast            = document.getElementById('toast');
 const sidebarToggleBtn = document.getElementById('sidebar-toggle');
 const sidebar          = document.querySelector('.sidebar');
+const sidebarCloseBtn  = document.getElementById('sidebar-close-btn');
 // ══════════════════════════════════
 // MATRIX DIGITAL RAIN BACKGROUND
 // ══════════════════════════════════
@@ -536,6 +537,11 @@ function switchToChat(roomId, deviceName) {
   applyCipherEffect(sidebarRoomId, roomId, 20);
   applyCipherEffect(headerRoomLabel, `ROOM: ${roomId}`, 20);
   applyCipherEffect(headerDeviceName, deviceName, 20);
+  
+  if (window.innerWidth <= 640) {
+    sidebar.classList.add('closed');
+    sidebarToggleBtn.classList.add('sidebar-closed');
+  }
   messageInput.focus();
 }
 function switchToJoin() {
@@ -584,6 +590,10 @@ connectBtn.addEventListener('click', () => {
 sidebarToggleBtn.addEventListener('click', () => {
   sidebar.classList.toggle('closed');
   sidebarToggleBtn.classList.toggle('sidebar-closed');
+});
+sidebarCloseBtn.addEventListener('click', () => {
+  sidebar.classList.add('closed');
+  sidebarToggleBtn.classList.add('sidebar-closed');
 });
 copyRoomBtn.addEventListener('click', () => {
   navigator.clipboard.writeText(myRoom).then(() => showToast('✓ Room ID copied!')).catch(() => showToast('Could not copy'));
