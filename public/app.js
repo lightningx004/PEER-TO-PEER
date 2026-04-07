@@ -368,37 +368,110 @@ function renderFileStrip() {
   });
 }
 // ══════════════════════════════════
-// UPLOAD FILES
+// UPLOAD FILES  (chunked + parallel)
 // ══════════════════════════════════
+const CHUNK_SIZE  = 100 * 1024 * 1024; // 100 MB per chunk → only 10-60 requests for 1-6 GB
+const CONCURRENCY = 8;                 // 8 parallel streams
 async function uploadFile(file) {
   const progressWrapper = document.createElement('div');
   progressWrapper.className = 'upload-progress msg-wrapper self';
   progressWrapper.innerHTML = `
     <span>Uploading ${escapeHtml(file.name)}...</span>
-    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-${Date.now()}"></div></div>`;
+    <div class="progress-bar-wrap"><div class="progress-bar-fill"></div></div>
+    <span class="upload-speed-label" style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;display:block;"></span>`;
   messagesInner.appendChild(progressWrapper);
   scrollToBottom();
-  const fill = progressWrapper.querySelector('.progress-bar-fill');
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('roomId', myRoom);
-  formData.append('deviceName', myName);
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload');
-    xhr.upload.addEventListener('progress', (e) => {
-      if (e.lengthComputable) {
-        fill.style.width = ((e.loaded / e.total) * 100) + '%';
-      }
+  const fill      = progressWrapper.querySelector('.progress-bar-fill');
+  const speedLabel = progressWrapper.querySelector('.upload-speed-label');
+  // ── Small file: use original single-request route ─────────────────
+  if (file.size <= CHUNK_SIZE) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('roomId', myRoom);
+    formData.append('deviceName', myName);
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/upload');
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) fill.style.width = ((e.loaded / e.total) * 100) + '%';
+      });
+      xhr.addEventListener('load', () => {
+        progressWrapper.remove();
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
+        else reject(new Error('Upload failed'));
+      });
+      xhr.addEventListener('error', () => { progressWrapper.remove(); reject(new Error('Upload error')); });
+      xhr.send(formData);
     });
-    xhr.addEventListener('load', () => {
-      progressWrapper.remove();
-      if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
-      else reject(new Error('Upload failed'));
+  }
+  // ── Large file: parallel chunked upload ───────────────────────────
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  const fileId      = crypto.randomUUID();
+  let bytesLoaded   = 0;
+  let startTime     = Date.now();
+  function updateProgress(chunkBytes) {
+    bytesLoaded += chunkBytes;
+    fill.style.width = ((bytesLoaded / file.size) * 100) + '%';
+    const elapsed = (Date.now() - startTime) / 1000;
+    const speed   = bytesLoaded / elapsed;
+    speedLabel.textContent = `${(speed / 1048576).toFixed(1)} MB/s`;
+  }
+  // Build an array of chunk-upload tasks
+  const tasks = Array.from({ length: totalChunks }, (_, i) => async () => {
+    const start = i * CHUNK_SIZE;
+    const end   = Math.min(start + CHUNK_SIZE, file.size);
+    const blob  = file.slice(start, end);
+    const res = await fetch('/upload-chunk', {
+      method: 'POST',
+      headers: {
+        'Content-Type':   'application/octet-stream',
+        'x-file-id':      fileId,
+        'x-chunk-index':  String(i),
+        'x-total-chunks': String(totalChunks)
+      },
+      body: blob
     });
-    xhr.addEventListener('error', () => { progressWrapper.remove(); reject(new Error('Upload error')); });
-    xhr.send(formData);
+    if (!res.ok) throw new Error(`Chunk ${i} failed`);
+    updateProgress(end - start);
   });
+  // Run chunks with limited concurrency
+  async function runWithConcurrency(tasks, limit) {
+    const results = [];
+    const executing = new Set();
+    for (const task of tasks) {
+      const p = Promise.resolve().then(() => task());
+      results.push(p);
+      executing.add(p);
+      p.finally(() => executing.delete(p));
+      if (executing.size >= limit) await Promise.race(executing);
+    }
+    return Promise.all(results);
+  }
+  try {
+    await runWithConcurrency(tasks, CONCURRENCY);
+    // Assembly phase — show it in the progress label
+    speedLabel.textContent = 'Assembling on server…';
+    fill.style.width = '99%';
+    // Finalize: assemble chunks on server
+    const finalRes = await fetch('/upload-finalize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileId,
+        originalName: file.name,
+        mimetype:     file.type || 'application/octet-stream',
+        totalChunks,
+        roomId:     myRoom,
+        deviceName: myName
+      })
+    });
+    progressWrapper.remove();
+    if (!finalRes.ok) throw new Error('Finalize failed');
+    return await finalRes.json();
+  } catch (err) {
+    progressWrapper.remove();
+    throw err;
+  }
 }
 // ══════════════════════════════════
 // SEND LOGIC
