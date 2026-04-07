@@ -39,57 +39,56 @@ const modalDownload    = document.getElementById('modal-download');
 const modalClose       = document.getElementById('modal-close');
 const toast            = document.getElementById('toast');
 // ══════════════════════════════════
-// PARTICLES CANVAS BACKGROUND
+// MATRIX DIGITAL RAIN BACKGROUND
 // ══════════════════════════════════
 const canvas = document.getElementById('particles-canvas');
 const ctx = canvas.getContext('2d');
-let particles = [];
+let columns = 0;
+let drops = [];
+const fontSize = 16;
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  columns = Math.floor(canvas.width / fontSize) + 1;
+  drops = [];
+  for (let x = 0; x < columns; x++) {
+    drops[x] = Math.random() * (canvas.height / fontSize);
+  }
 }
-function createParticle() {
-  return {
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 0.4,
-    vy: (Math.random() - 0.5) * 0.4,
-    size: Math.random() * 1.5 + 0.3,
-    opacity: Math.random() * 0.5 + 0.1,
-    char: Math.random() > 0.7 ? String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96)) : (Math.random() > 0.5 ? '1' : '0')
-  };
-}
-function initParticles() {
-  resizeCanvas();
-  particles = Array.from({ length: 120 }, createParticle);
-}
-function drawParticles() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.font = '10px "Share Tech Mono"';
-  particles.forEach(p => {
-    ctx.globalAlpha = p.opacity;
-    ctx.fillStyle = '#00ff41';
-    if (Math.random() > 0.97) {
-      p.char = Math.random() > 0.5 ? String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96)) : (Math.random() > 0.5 ? '1' : '0');
+function drawMatrix() {
+  // Translucent black to create the trail effect
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  ctx.font = fontSize + 'px "Share Tech Mono", monospace';
+  
+  for (let i = 0; i < drops.length; i++) {
+    const char = Math.random() > 0.6 
+      ? String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96)) 
+      : (Math.random() > 0.5 ? '1' : '0');
+      
+    const x = i * fontSize;
+    const y = drops[i] * fontSize;
+    
+    // Random highlights for some characters
+    if (Math.random() > 0.95) {
+      ctx.fillStyle = '#7fff8a'; // Bright green
+    } else {
+      ctx.fillStyle = '#00ff41'; // Standard green
     }
-    ctx.fillText(p.char, p.x, p.y);
-    p.x += p.vx;
-    p.y += p.vy;
-    if (p.x < -10) p.x = canvas.width + 10;
-    if (p.x > canvas.width + 10) p.x = -10;
-    if (p.y < -10) p.y = canvas.height + 10;
-    if (p.y > canvas.height + 10) p.y = -10;
-    // Random flicker
-    if (Math.random() > 0.98) p.opacity = Math.random() * 0.5 + 0.05;
-  });
-  ctx.globalAlpha = 1;
-  requestAnimationFrame(drawParticles);
+    
+    ctx.fillText(char, x, y);
+    
+    // Reset drop to top randomly when it offscreen
+    if (y > canvas.height && Math.random() > 0.975) {
+      drops[i] = 0;
+    }
+    drops[i]++;
+  }
 }
-window.addEventListener('resize', () => {
-  resizeCanvas();
-});
-initParticles();
-drawParticles();
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+const matrixInterval = setInterval(drawMatrix, 50);
 // ══════════════════════════════════
 // UTILITY FUNCTIONS
 // ══════════════════════════════════
