@@ -93,6 +93,41 @@ drawParticles();
 // ══════════════════════════════════
 // UTILITY FUNCTIONS
 // ══════════════════════════════════
+function applyCipherEffect(element, finalString = null, speedMs = 30) {
+  const symbols = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ01@#$%^&*()_+{}[]|:;<>,./?~-';
+  let iterations = 0;
+  const targetText = finalString || element.innerText;
+  
+  clearInterval(element.cipherInterval);
+  
+  element.cipherInterval = setInterval(() => {
+    const currentStr = targetText
+      .split('')
+      .map((char, index) => {
+        if(index < iterations) return targetText[index];
+        if(targetText[index] === ' ') return ' ';
+        return symbols[Math.floor(Math.random() * symbols.length)];
+      })
+      .join('');
+    
+    element.innerText = currentStr;
+    if (element.hasAttribute('data-text')) element.setAttribute('data-text', currentStr);
+    
+    if(iterations >= targetText.length) {
+      clearInterval(element.cipherInterval);
+      element.innerText = targetText;
+      if (element.hasAttribute('data-text')) element.setAttribute('data-text', targetText);
+    }
+    iterations += 1/3;
+  }, speedMs);
+}
+// Initial Triggers
+const logo = document.querySelector('.logo-glitch');
+if (logo) applyCipherEffect(logo, 'NEXUS LINK', 40);
+const logoSub = document.querySelector('.logo-sub');
+if (logoSub) applyCipherEffect(logoSub, '[ CROSS-DEVICE COMMUNICATION PROTOCOL ]', 20);
+const termTitle = document.querySelector('.terminal-title');
+if (termTitle) applyCipherEffect(termTitle, '// ESTABLISH CONNECTION', 20);
 function generateRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let id = '';
@@ -139,9 +174,9 @@ function scrollToBottom() {
 function appendSystemMsg(text) {
   const el = document.createElement('div');
   el.className = 'msg-system';
-  el.textContent = text;
   messagesInner.appendChild(el);
   scrollToBottom();
+  applyCipherEffect(el, text, 20);
 }
 function appendTextMessage(data, isSelf) {
   const wrapper = document.createElement('div');
