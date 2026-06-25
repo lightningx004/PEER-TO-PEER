@@ -8,6 +8,8 @@ let myRoom = '';
 let myName = '';
 let pendingFiles = [];
 let typingTimeout = null;
+let isOnline = navigator.onLine;
+let messageQueue = JSON.parse(localStorage.getItem('nexus_queue') || '[]');
 let isTyping = false;
 let allFiles = {};  // id → file data
 let knownMessages = new Set(); // to prevent duplicate rendering
@@ -107,29 +109,34 @@ const matrixInterval = setInterval(drawMatrix, 50);
 // ══════════════════════════════════
 function applyCipherEffect(element, finalString = null, speedMs = 30) {
   const symbols = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ01@#$%^&*()_+{}[]|:;<>,./?~-';
-  let iterations = 0;
   const targetText = finalString || element.innerText;
-  
   clearInterval(element.cipherInterval);
-  
+
+  // Long text: quick 3-frame glitch flash then instant reveal
+  if (targetText.length > 40) {
+    const scramble = () => targetText.split('').map(ch => ch === ' ' ? ' ' : symbols[Math.floor(Math.random() * symbols.length)]).join('');
+    element.innerText = scramble();
+    if (element.hasAttribute('data-text')) element.setAttribute('data-text', element.innerText);
+    let flashes = 0;
+    element.cipherInterval = setInterval(() => {
+      flashes++;
+      if (flashes < 3) { element.innerText = scramble(); if (element.hasAttribute('data-text')) element.setAttribute('data-text', element.innerText); }
+      else { clearInterval(element.cipherInterval); element.innerText = targetText; if (element.hasAttribute('data-text')) element.setAttribute('data-text', targetText); }
+    }, 60);
+    return;
+  }
+
+  // Short text: original char-by-char reveal
+  let iterations = 0;
   element.cipherInterval = setInterval(() => {
-    const currentStr = targetText
-      .split('')
-      .map((char, index) => {
-        if(index < iterations) return targetText[index];
-        if(targetText[index] === ' ') return ' ';
-        return symbols[Math.floor(Math.random() * symbols.length)];
-      })
-      .join('');
-    
+    const currentStr = targetText.split('').map((char, index) => {
+      if (index < iterations) return targetText[index];
+      if (targetText[index] === ' ') return ' ';
+      return symbols[Math.floor(Math.random() * symbols.length)];
+    }).join('');
     element.innerText = currentStr;
     if (element.hasAttribute('data-text')) element.setAttribute('data-text', currentStr);
-    
-    if(iterations >= targetText.length) {
-      clearInterval(element.cipherInterval);
-      element.innerText = targetText;
-      if (element.hasAttribute('data-text')) element.setAttribute('data-text', targetText);
-    }
+    if (iterations >= targetText.length) { clearInterval(element.cipherInterval); element.innerText = targetText; if (element.hasAttribute('data-text')) element.setAttribute('data-text', targetText); }
     iterations += 1/3;
   }, speedMs);
 }
@@ -547,7 +554,19 @@ async function sendMessage() {
   stopTyping();
 
   if (text) {
-    socket.emit('send-message', { roomId: myRoom, message: text, deviceName: myName });
+    if (socket && socket.connected) {
+      socket.emit('send-message', { roomId: myRoom, message: text, deviceName: myName });
+    } else {
+      // Offline: queue the message and show it locally with a pending indicator
+      const queued = { roomId: myRoom, message: text, deviceName: myName, _queued: true };
+      messageQueue.push(queued);
+      localStorage.setItem('nexus_queue', JSON.stringify(messageQueue));
+      // Show locally with pending style
+      const fakeData = { id: crypto.randomUUID(), text, sender: myName, timestamp: new Date().toISOString() };
+      appendTextMessage(fakeData, true);
+      showOfflineBanner();
+      showToast('⚠ Offline — message queued, will send when reconnected', 3500);
+    }
   }
 
   for (const file of files) {
@@ -609,8 +628,17 @@ function initSocket(roomId, deviceName) {
   let isFirstConnect = true;
 
   socket.on('connect', () => {
-    // Always (re)join the room on (re)connect
+    isOnline = true;
+    hideOfflineBanner();
     socket.emit('join-room', { roomId, deviceName });
+    // Flush any queued messages
+    if (messageQueue.length > 0) {
+      const toSend = [...messageQueue];
+      messageQueue.length = 0;
+      localStorage.removeItem('nexus_queue');
+      toSend.forEach(q => socket.emit('send-message', { roomId: q.roomId, message: q.message, deviceName: q.deviceName }));
+      showToast(`✓ Reconnected — ${toSend.length} queued message(s) sent`, 3000);
+    }
   });
 
   socket.on('room-joined', ({ roomId, userCount, deviceList: dl }) => {
@@ -664,8 +692,9 @@ function initSocket(roomId, deviceName) {
   });
 
   socket.on('disconnect', (reason) => {
+    isOnline = false;
+    showOfflineBanner();
     appendSystemMsg('⟩ Connection lost. Reconnecting...');
-    // If server intentionally disconnected us, reconnect manually
     if (reason === 'io server disconnect') {
       socket.connect();
     }
@@ -798,3 +827,44 @@ document.addEventListener('keydown', (e) => {
     initSocket(savedRoom, savedName);
   }
 })();
+
+// ══════════════════════════════════
+// OFFLINE BANNER
+// ══════════════════════════════════
+(function createOfflineBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'offline-banner';
+  banner.innerHTML = '⚡ OFFLINE — messages will queue and send on reconnect';
+  banner.style.cssText = [
+    'position:fixed', 'bottom:80px', 'left:50%', 'transform:translateX(-50%)',
+    'background:#1a0000', 'color:#ff4444', 'border:1px solid #ff4444',
+    'padding:6px 18px', 'font-size:0.72rem', 'letter-spacing:0.08em',
+    'border-radius:4px', 'z-index:9999', 'display:none',
+    'font-family:"Share Tech Mono",monospace', 'box-shadow:0 0 12px #ff444466'
+  ].join(';');
+  document.body.appendChild(banner);
+})();
+
+function showOfflineBanner() {
+  const b = document.getElementById('offline-banner');
+  if (b) b.style.display = 'block';
+}
+function hideOfflineBanner() {
+  const b = document.getElementById('offline-banner');
+  if (b) b.style.display = 'none';
+}
+
+// Browser online/offline events (for when device loses internet entirely)
+window.addEventListener('offline', () => { isOnline = false; showOfflineBanner(); });
+window.addEventListener('online',  () => { isOnline = true;  if (socket && socket.connected) hideOfflineBanner(); });
+
+// ══════════════════════════════════
+// SERVICE WORKER REGISTRATION
+// ══════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('[NEXUS] Service Worker registered:', reg.scope))
+      .catch(err => console.warn('[NEXUS] SW registration failed:', err));
+  });
+}
