@@ -37,6 +37,17 @@ app.use(express.json());
 // Track rooms and users
 const rooms = {};
 const roomMessages = {};
+
+const MAX_HISTORY_MESSAGES = 100;
+
+function broadcastMessage(roomId, msgData, eventName) {
+  if (!roomMessages[roomId]) roomMessages[roomId] = [];
+  roomMessages[roomId].push(msgData);
+  if (roomMessages[roomId].length > MAX_HISTORY_MESSAGES) {
+    roomMessages[roomId].shift();
+  }
+  io.to(roomId).emit(eventName, msgData);
+}
 // File upload endpoint
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
@@ -57,10 +68,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
       sender: deviceName || 'Unknown Device',
       type: 'file'
     };
-    if (!roomMessages[roomId]) roomMessages[roomId] = [];
-    roomMessages[roomId].push(msgData);
-    if (roomMessages[roomId].length > 100) roomMessages[roomId].shift();
-    io.to(roomId).emit('file-shared', msgData);
+    broadcastMessage(roomId, msgData, 'file-shared');
   }
   res.json(fileData);
 });
@@ -118,10 +126,7 @@ app.post('/upload-finalize', express.json(), async (req, res) => {
     };
     if (roomId) {
       const msgData = { ...fileData, sender: deviceName || 'Unknown Device', type: 'file' };
-      if (!roomMessages[roomId]) roomMessages[roomId] = [];
-      roomMessages[roomId].push(msgData);
-      if (roomMessages[roomId].length > 100) roomMessages[roomId].shift();
-      io.to(roomId).emit('file-shared', msgData);
+      broadcastMessage(roomId, msgData, 'file-shared');
     }
     res.json(fileData);
   } catch (err) {
@@ -172,11 +177,8 @@ io.on('connection', (socket) => {
       type: 'text'
     };
     
-    if (!roomMessages[roomId]) roomMessages[roomId] = [];
-    roomMessages[roomId].push(msgData);
-    if (roomMessages[roomId].length > 100) roomMessages[roomId].shift();
     // Broadcast to all in room including sender
-    io.to(roomId).emit('receive-message', msgData);
+    broadcastMessage(roomId, msgData, 'receive-message');
   });
   socket.on('typing', ({ roomId, deviceName }) => {
     socket.to(roomId).emit('user-typing', { deviceName });
@@ -190,7 +192,10 @@ io.on('connection', (socket) => {
       delete rooms[roomId][socket.id];
       const userCount = Object.keys(rooms[roomId]).length;
       const deviceList = Object.values(rooms[roomId]).map(u => u.deviceName);
-      if (userCount === 0) delete rooms[roomId];
+      if (userCount === 0) {
+        delete rooms[roomId];
+        delete roomMessages[roomId]; // Fix memory leak
+      }
       io.to(roomId).emit('user-left', {
         deviceName,
         userCount,
