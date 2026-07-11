@@ -46,64 +46,10 @@ const sidebar          = document.querySelector('.sidebar');
 const sidebarCloseBtn  = document.getElementById('sidebar-close-btn');
 
 // ══════════════════════════════════
-// MATRIX DIGITAL RAIN BACKGROUND
+// CONSTANTS & UTILITY FUNCTIONS
 // ══════════════════════════════════
-const canvas = document.getElementById('particles-canvas');
-const ctx = canvas.getContext('2d');
-
-let columns = 0;
-let drops = [];
-const fontSize = 16;
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  columns = Math.floor(canvas.width / fontSize) + 1;
-  drops = [];
-  for (let x = 0; x < columns; x++) {
-    drops[x] = Math.random() * (canvas.height / fontSize);
-  }
-}
-
-function drawMatrix() {
-  // Translucent black to create the trail effect
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  ctx.font = fontSize + 'px "Share Tech Mono", monospace';
-  
-  for (let i = 0; i < drops.length; i++) {
-    const char = Math.random() > 0.6 
-      ? String.fromCharCode(0x30A0 + Math.floor(Math.random() * 96)) 
-      : (Math.random() > 0.5 ? '1' : '0');
-      
-    const x = i * fontSize;
-    const y = drops[i] * fontSize;
-    
-    // Random highlights for some characters
-    if (Math.random() > 0.95) {
-      ctx.fillStyle = '#7fff8a'; // Bright green
-    } else {
-      ctx.fillStyle = '#00ff41'; // Standard green
-    }
-    
-    ctx.fillText(char, x, y);
-    
-    // Reset drop to top randomly when it offscreen
-    if (y > canvas.height && Math.random() > 0.975) {
-      drops[i] = 0;
-    }
-    drops[i]++;
-  }
-}
-
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-const matrixInterval = setInterval(drawMatrix, 50);
-
-// ══════════════════════════════════
-// UTILITY FUNCTIONS
+const BYTES_PER_KB = 1024;
+const BYTES_PER_MB = 1048576;
 // ══════════════════════════════════
 function applyCipherEffect(element, finalString = null, speedMs = 30) {
   const symbols = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ01@#$%^&*()_+{}[]|:;<>,./?~-';
@@ -161,15 +107,7 @@ function applyCipherEffect(element, finalString = null, speedMs = 30) {
   }, speedMs);
 }
 
-// Initial Triggers
-const logo = document.querySelector('.logo-glitch');
-if (logo) applyCipherEffect(logo, 'NEXUS LINK', 40);
-
-const logoSub = document.querySelector('.logo-sub');
-if (logoSub) applyCipherEffect(logoSub, '[ CROSS-DEVICE COMMUNICATION PROTOCOL ]', 20);
-
-const termTitle = document.querySelector('.terminal-title');
-if (termTitle) applyCipherEffect(termTitle, '// ESTABLISH CONNECTION', 20);
+// Initial Triggers removed to stop the scrambling effect on login page
 
 function generateRoomId() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -184,9 +122,9 @@ function formatTime(iso) {
 }
 
 function formatBytes(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
+  if (bytes < BYTES_PER_KB) return bytes + ' B';
+  if (bytes < BYTES_PER_MB) return (bytes / BYTES_PER_KB).toFixed(1) + ' KB';
+  return (bytes / BYTES_PER_MB).toFixed(1) + ' MB';
 }
 
 function getFileIcon(mimetype, name) {
@@ -242,11 +180,27 @@ function appendTextMessage(data, isSelf) {
     ? `<span>${formatTime(data.timestamp)}</span>`
     : `<span>${escapeHtml(data.sender)}</span><span>${formatTime(data.timestamp)}</span>`;
 
+  const bubbleContainer = document.createElement('div');
+  bubbleContainer.className = 'msg-bubble-container';
+
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
 
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'copy-msg-btn';
+  copyBtn.textContent = 'COPY';
+  copyBtn.title = 'Copy message text';
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(data.text)
+      .then(() => showToast('✓ Copied!'))
+      .catch(() => showToast('⚠ Copy failed'));
+  };
+
+  bubbleContainer.appendChild(bubble);
+  bubbleContainer.appendChild(copyBtn);
+
   wrapper.appendChild(meta);
-  wrapper.appendChild(bubble);
+  wrapper.appendChild(bubbleContainer);
   messagesInner.appendChild(wrapper);
   scrollToBottom();
 

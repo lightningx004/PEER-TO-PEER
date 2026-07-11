@@ -27,11 +27,23 @@
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--mono); }
+html, body { 
+  width: 100%; height: 100%; overflow: hidden; 
+  background: radial-gradient(circle at center, var(--bg3) 0%, var(--bg) 100%); 
+  color: var(--text); 
+  font-family: var(--mono); 
+}
 
-/* ── Particle Canvas ── */
-#particles-canvas {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+/* ── Dot Matrix Background Grid ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(var(--green) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  opacity: 0.15;
 }
 
 /* ── CRT Scanlines ── */
@@ -792,4 +804,37 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
   }
   .sidebar-close-btn { display: flex; }
   .chat-main { width: 100%; }
+}
+
+/* ── Copy Message Button ── */
+.msg-bubble-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+.msg-wrapper.self .msg-bubble-container {
+  align-items: flex-end;
+}
+.copy-msg-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.1em;
+}
+.msg-wrapper:hover .copy-msg-btn {
+  opacity: 1;
+}
+.copy-msg-btn:hover {
+  background: rgba(0, 255, 65, 0.1);
+  color: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 5px rgba(0,255,65,0.2);
 }
