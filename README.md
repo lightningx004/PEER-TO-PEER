@@ -18,6 +18,11 @@ By utilizing **WebSockets (Socket.io)** and **chunked stream processing**, devic
 
 ---
 
+## 🚀 Live Demo
+  [Try it here] https://nexus-link-p192.onrender.com 
+
+  First load may take ~30s if the server was idle (free tier) — thanks for your patience
+
 ## ✨ Key Features
 
 - 🔑 **Instant Room Pairing**: Connect mobile devices, laptops, and tablets using temporary room IDs.
