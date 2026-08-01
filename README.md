@@ -57,14 +57,12 @@ Make sure you have **Node.js** (v14 or higher) and **npm** installed on your sys
 
 
    Install Dependencies:
+   bash
+   npm install
 
-bash
-npm install
-
-Start the Development Server:
-
-bash
-npm start
-
-Access the Application: Open your browser and navigate to:
-http://localhost:3000
+   Start the Development Server:
+   bash
+   npm start
+   
+   Access the Application: Open your browser and navigate to:
+   http://localhost:3000
