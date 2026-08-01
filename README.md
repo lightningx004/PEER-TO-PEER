@@ -71,3 +71,6 @@ Make sure you have **Node.js** (v14 or higher) and **npm** installed on your sys
    
    Access the Application: Open your browser and navigate to:
    http://localhost:3000
+
+
+<img width="1365" height="767" alt="image" src="https://github.com/user-attachments/assets/fca668c2-a5bf-4c7e-9ec2-e388bbd8e340" />
